@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <h1>{{ title }}</h1>
+  </div>
+</section>
+
+<form id="quote-form" class="quote-layout" method="post" action="{{ action }}" novalidate>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+  <div class="form-col">
+    <fieldset class="section">
+      <legend>Customer</legend>
+      <div class="field {{ 'has-error' if errors.customer_name }}">
+        <label for="customer_name">Full name</label>
+        <input id="customer_name" name="customer_name" maxlength="80" autocomplete="name"
+               value="{{ values.customer_name or '' }}" required>
+        <p class="field-error" data-for="customer_name">{{ errors.customer_name or '' }}</p>
+      </div>
+      <div class="field-row">
+        <div class="field {{ 'has-error' if errors.customer_email }}">
+          <label for="customer_email">Email</label>
+          <input id="customer_email" name="customer_email" type="email" maxlength="120" autocomplete="email"
+                 value="{{ values.customer_email or '' }}" required>
+          <p class="field-error" data-for="customer_email">{{ errors.customer_email or '' }}</p>
+        </div>
+        <div class="field {{ 'has-error' if errors.customer_phone }}">
+          <label for="customer_phone">Phone <span class="optional">optional</span></label>
+          <input id="customer_phone" name="customer_phone" type="tel" maxlength="20" autocomplete="tel"
+                 value="{{ values.customer_phone or '' }}">
+          <p class="field-error" data-for="customer_phone">{{ errors.customer_phone or '' }}</p>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset class="section">
+      <legend>Job site</legend>
+      <div class="field-row">
+        <div class="field {{ 'has-error' if errors.city }}">
+          <label for="city">City</label>
+          <input id="city" name="city" maxlength="60" value="{{ values.city or '' }}" required>
+          <p class="field-error" data-for="city">{{ errors.city or '' }}</p>
+        </div>
+        <div class="field field-narrow {{ 'has-error' if errors.state }}">
+          <label for="state">State</label>
+          <select id="state" name="state" required>
+            {% for code, name in states.items() %}
+              <option value="{{ code }}" {{ 'selected' if values.state == code }}>{{ code }}</option>
+            {% endfor %}
+          </select>
+          <p class="field-error" data-for="state">{{ errors.state or '' }}</p>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field {{ 'has-error' if errors.travel_miles }}">
+          <label for="travel_miles">Miles from the shop</label>
+          <input id="travel_miles" name="travel_miles" type="number" min="0" max="60" step="0.1"
+                 inputmode="decimal" value="{{ values.travel_miles if values.travel_miles is not none else '0' }}">
+          <p class="hint">No charge within 10 mi. Service area is 60 mi.</p>
+          <p class="field-error" data-for="travel_miles">{{ errors.travel_miles or '' }}</p>
+        </div>
+        <div class="field {{ 'has-error' if errors.terrain }}">
+          <label for="terrain">Terrain</label>
+          <select id="terrain" name="terrain">
+            {% for key, t in terrain_options.items() %}
+              <option value="{{ key }}" {{ 'selected' if values.terrain == key }}>{{ t.label }}</option>
+            {% endfor %}
+          </select>
+          <p class="field-error" data-for="terrain">{{ errors.terrain or '' }}</p>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset class="section">
+      <legend>Services</legend>
+      <p class="field-error field-error-block" data-for="services">{{ errors.services or '' }}</p>
+      <div class="service-grid">
+        {% for key, s in services.items() %}
+          {% set field = 'qty_' ~ key %}
+          <div class="field service {{ 'has-error' if errors[field] }}">
+            <label for="{{ field }}">{{ s.label }}</label>
+            <div class="input-unit">
+              <input id="{{ field }}" name="{{ field }}" type="number" min="0" max="{{ s.max }}" step="0.1"
+                     inputmode="decimal" data-service data-max="{{ s.max }}" data-label="{{ s.label }}"
+                     value="{{ (values[field] if values[field] is defined else quantities.get(key)) or '' }}"
+                     placeholder="0">
+              <span class="unit">{{ s.unit }}</span>
+            </div>
+            <p class="field-error" data-for="{{ field }}">{{ errors[field] or '' }}</p>
+          </div>
+        {% endfor %}
+      </div>
+      <div class="field-row">
+        <div class="field {{ 'has-error' if errors.frequency }}">
+          <label for="frequency">How often?</label>
+          <select id="frequency" name="frequency">
+            {% for key, f in frequency_options.items() %}
+              <option value="{{ key }}" {{ 'selected' if values.frequency == key }}>{{ f.label }}{% if f.discount %} ({{ (f.discount * 100) | int }}% off labor){% endif %}</option>
+            {% endfor %}
+          </select>
+          <p class="field-error" data-for="frequency">{{ errors.frequency or '' }}</p>
+        </div>
+      </div>
+      <div class="field {{ 'has-error' if errors.notes }}">
+        <label for="notes">Notes for the crew <span class="optional">optional</span></label>
+        <textarea id="notes" name="notes" rows="3" maxlength="500">{{ values.notes or '' }}</textarea>
+        <p class="hint"><span id="notes-count">0</span>/500</p>
+        <p class="field-error" data-for="notes">{{ errors.notes or '' }}</p>
+      </div>
+    </fieldset>
+  </div>
+
+  <aside class="summary-col">
+    <div class="panel" id="live-summary" aria-live="polite">
+      <p class="summary-label">Estimate</p>
+      <div class="summary-total" id="sum-total">$0.00</div>
+      <p class="summary-sub" id="sum-crew">Enter at least one service.</p>
+      <dl class="lines">
+        <div><dt>Labor</dt><dd id="sum-labor">$0.00</dd></div>
+        <div><dt>Materials (25% markup)</dt><dd id="sum-materials">$0.00</dd></div>
+        <div><dt>Recurring discount</dt><dd id="sum-discount">$0.00</dd></div>
+        <div><dt>Travel</dt><dd id="sum-travel">$0.00</dd></div>
+        <div><dt>Minimum job charge</dt><dd id="sum-minimum">$0.00</dd></div>
+        <div><dt>Sales tax (materials)</dt><dd id="sum-tax">$0.00</dd></div>
+        <div><dt>Deposit due</dt><dd id="sum-deposit">$0.00</dd></div>
+      </dl>
+      <p class="summary-status" id="sum-status"></p>
+      <button type="submit" class="btn btn-primary btn-block" id="save-btn">Save quote</button>
+    </div>
+  </aside>
+</form>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/common.js') }}"></script>
+<script src="{{ url_for('static', filename='js/quote_form.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>GreenQuote architecture</title>
+<link rel="stylesheet" href="architecture.css">
+</head>
+<body>
+<svg viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="GreenQuote n-tier architecture">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#24513c"/>
+    </marker>
+    <marker id="arrA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#9a6416"/>
+    </marker>
+  </defs>
+  <rect width="1600" height="900" fill="#f7f6f2"/>
+  <text x="60" y="70" class="title">How a request moves through GreenQuote</text>
+  <text x="60" y="104" class="sub">The browser talks only to Flask. Flask talks to SQLite and the two outside APIs.</text>
+
+  <g>
+    <rect x="60" y="150" width="340" height="660" rx="18" class="tier"/>
+    <text x="84" y="190" class="tier-label">1. Presentation</text>
+    <text x="84" y="216" class="tier-sub">Browser (laptop or phone)</text>
+    <rect x="84" y="240" width="292" height="118" rx="12" class="box"/>
+    <text x="104" y="274" class="box-title">Jinja templates</text>
+    <text x="104" y="302" class="box-text">base.html shared layout</text>
+    <text x="104" y="326" class="box-text">dashboard · quote_form · detail</text>
+    <rect x="84" y="378" width="292" height="92" rx="12" class="box"/>
+    <text x="104" y="412" class="box-title">style.css</text>
+    <text x="104" y="440" class="box-text">one stylesheet, phone + desktop</text>
+    <rect x="84" y="490" width="292" height="150" rx="12" class="box box-js"/>
+    <text x="104" y="524" class="box-title">JavaScript</text>
+    <text x="104" y="552" class="box-text">quote_form.js: validation +</text>
+    <text x="104" y="576" class="box-text">live estimate (fetch → Flask)</text>
+    <text x="104" y="600" class="box-text">quote_detail.js: forecast and</text>
+    <text x="104" y="624" class="box-text">draft buttons (fetch → Flask)</text>
+    <text x="104" y="700" class="note">CSP connect-src 'self':</text>
+    <text x="104" y="724" class="note">JS can only call this server</text>
+  </g>
+
+  <g>
+    <rect x="520" y="150" width="520" height="660" rx="18" class="tier tier-app"/>
+    <text x="544" y="190" class="tier-label">2. Application</text>
+    <text x="544" y="216" class="tier-sub">Flask (Python)</text>
+    <rect x="544" y="240" width="472" height="176" rx="12" class="box"/>
+    <text x="564" y="274" class="box-title">app.py, routes</text>
+    <text x="564" y="302" class="box-text">GET /  ·  GET+POST /quotes/new  ·  GET /quotes/&lt;id&gt;</text>
+    <text x="564" y="326" class="box-text">GET+POST /quotes/&lt;id&gt;/edit  ·  POST …/status</text>
+    <text x="564" y="350" class="box-text">POST /api/estimate · /api/quotes/&lt;id&gt;/forecast</text>
+    <text x="564" y="374" class="box-text">POST /api/quotes/&lt;id&gt;/proposal · CSV export · print</text>
+    <text x="564" y="398" class="box-text box-strong">CSRF check · security headers · error pages</text>
+    <rect x="544" y="436" width="226" height="120" rx="12" class="box"/>
+    <text x="564" y="470" class="box-title">validation.py</text>
+    <text x="564" y="498" class="box-text">whitelists, ranges,</text>
+    <text x="564" y="522" class="box-text">regex, friendly errors</text>
+    <rect x="790" y="436" width="226" height="120" rx="12" class="box"/>
+    <text x="810" y="470" class="box-title">pricing.py</text>
+    <text x="810" y="498" class="box-text">Decimal money math,</text>
+    <text x="810" y="522" class="box-text">terrain, discounts, tax</text>
+    <rect x="544" y="576" width="472" height="110" rx="12" class="box box-svc"/>
+    <text x="564" y="610" class="box-title">services/weather.py · services/proposals.py</text>
+    <text x="564" y="638" class="box-text">timeouts and try/except, friendly 502 on failure</text>
+    <text x="564" y="662" class="box-text">rate days Good/Fair/Poor · prompt with locked prices</text>
+    <rect x="544" y="706" width="472" height="80" rx="12" class="box box-env"/>
+    <text x="564" y="740" class="box-title">config.py ← .env (python-dotenv)</text>
+    <text x="564" y="766" class="box-text env-text">SECRET_KEY · OPENAI_API_KEY · URLs, never in code</text>
+  </g>
+
+  <g>
+    <rect x="1160" y="150" width="380" height="300" rx="18" class="tier tier-data"/>
+    <text x="1184" y="190" class="tier-label">3. Data</text>
+    <text x="1184" y="216" class="tier-sub">SQLite via db.py</text>
+    <rect x="1184" y="240" width="332" height="186" rx="12" class="box"/>
+    <text x="1204" y="274" class="box-title">data/greenquote.db</text>
+    <text x="1204" y="304" class="box-text">quotes, customer, totals, status,</text>
+    <text x="1204" y="328" class="box-text">   proposal, forecast</text>
+    <text x="1204" y="356" class="box-text">quote_items, one row per service</text>
+    <text x="1204" y="384" class="box-text">activity, history timeline</text>
+    <text x="1204" y="410" class="box-text box-strong">parameterized ? queries only</text>
+  </g>
+
+  <g>
+    <rect x="1160" y="500" width="380" height="310" rx="18" class="tier tier-ext"/>
+    <text x="1184" y="540" class="tier-label">External services</text>
+    <rect x="1184" y="564" width="332" height="100" rx="12" class="box"/>
+    <text x="1204" y="598" class="box-title">Open-Meteo API</text>
+    <text x="1204" y="626" class="box-text">geocoding + 7-day forecast</text>
+    <text x="1204" y="650" class="box-text">(third-party, non-AI)</text>
+    <rect x="1184" y="684" width="332" height="100" rx="12" class="box"/>
+    <text x="1204" y="718" class="box-title">OpenAI · gpt-5.4-nano</text>
+    <text x="1204" y="746" class="box-text">writes the customer proposal</text>
+    <text x="1204" y="770" class="box-text">from JSON with fixed prices</text>
+  </g>
+
+  <path d="M400 300 L540 300" class="flow" marker-end="url(#arr)"/>
+  <text x="410" y="288" class="flow-text">HTTP request</text>
+  <path d="M540 340 L400 340" class="flow" marker-end="url(#arr)"/>
+  <text x="410" y="362" class="flow-text">HTML / JSON</text>
+  <path d="M376 560 Q470 520 540 340" class="flow flow-js" marker-end="url(#arrA)"/>
+  <text x="404" y="452" class="flow-text flow-text-a">fetch +</text>
+  <text x="404" y="472" class="flow-text flow-text-a">CSRF</text>
+
+  <path d="M1016 320 L1180 320" class="flow" marker-end="url(#arr)"/>
+  <path d="M1180 360 L1016 360" class="flow" marker-end="url(#arr)"/>
+  <text x="1030" y="304" class="flow-text">INSERT / UPDATE</text>
+  <text x="1040" y="384" class="flow-text">SELECT rows</text>
+
+  <path d="M1016 610 L1180 610" class="flow" marker-end="url(#arr)"/>
+  <path d="M1016 650 Q1100 700 1180 730" class="flow" marker-end="url(#arr)"/>
+  <text x="1040" y="596" class="flow-text">HTTPS GET</text>
+  <text x="1030" y="770" class="flow-text">HTTPS POST</text>
+
+  <line x1="460" y1="130" x2="460" y2="840" class="divider"/>
+  <text x="470" y="860" class="divider-text">browser | server</text>
+</svg>
+</body>
+</html>

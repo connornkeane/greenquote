@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Quote #{{ quote.id }}{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <h1>{{ quote.customer_name }}</h1>
+    <p class="page-meta">
+      Quote #{{ quote.id }} · <span class="status status-{{ quote.status | lower }}">{{ quote.status }}</span>
+      · {{ quote.city }}, {{ quote.state }} · {{ terrain_label }} · {{ frequency_label }}
+    </p>
+  </div>
+  <div class="head-actions">
+    <a class="btn btn-secondary" href="{{ url_for('edit_quote', quote_id=quote.id) }}">Edit</a>
+    <a class="btn btn-secondary" href="{{ url_for('print_quote', quote_id=quote.id) }}">Print / PDF</a>
+    <a class="btn btn-secondary" href="{{ url_for('export_quote', quote_id=quote.id) }}">CSV</a>
+  </div>
+</section>
+
+<div class="detail-layout" data-quote-id="{{ quote.id }}">
+  <div class="detail-main">
+    <section class="section">
+      <h2>Line items</h2>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr><th>Service</th><th class="num">Qty</th><th class="num hide-sm">Labor</th><th class="num hide-sm">Materials</th><th class="num">Amount</th></tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+              <tr>
+                <td>{{ item.label }}</td>
+                <td class="num">{{ '%g' % item.quantity }} <span class="unit-inline">{{ item.unit }}</span></td>
+                <td class="num hide-sm">{{ item.labor_cost | money }}</td>
+                <td class="num hide-sm">{{ item.material_cost | money }}</td>
+                <td class="num">{{ item.line_total | money }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <dl class="lines detail-totals">
+        {% if quote.discount %}<div><dt>Recurring discount</dt><dd>-{{ quote.discount | money }}</dd></div>{% endif %}
+        {% if quote.travel_fee %}<div><dt>Travel</dt><dd>{{ quote.travel_fee | money }}</dd></div>{% endif %}
+        {% if quote.minimum_adjustment %}<div><dt>Minimum job charge</dt><dd>{{ quote.minimum_adjustment | money }}</dd></div>{% endif %}
+        <div><dt>Sales tax (materials)</dt><dd>{{ quote.tax | money }}</dd></div>
+        <div class="total"><dt>Total</dt><dd>{{ quote.total | money }}</dd></div>
+        {% if quote.deposit %}<div><dt>Deposit due at booking</dt><dd>{{ quote.deposit | money }}</dd></div>{% endif %}
+      </dl>
+      <p class="muted">{{ quote.labor_hours }} labor hours, about {{ quote.crew_days }} day{{ 's' if quote.crew_days != 1 }} for a 3-person crew.</p>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2>Crew forecast</h2>
+        <button type="button" class="btn btn-secondary btn-small" id="forecast-btn">
+          {{ 'Refresh forecast' if forecast else 'Check forecast' }}
+        </button>
+      </div>
+      <p class="muted" id="forecast-location">
+        {% if quote.location_label %}Next 7 days in {{ quote.location_label }}.{% else %}Pulls the 7-day forecast for the job site and picks a start date.{% endif %}
+      </p>
+      <p class="recommend {{ '' if quote.recommended_date else 'hidden' }}" id="forecast-recommend">
+        Suggested start: <strong id="forecast-date">{{ quote.recommended_date | nice_date }}</strong>
+      </p>
+      <p class="inline-error hidden" id="forecast-error" role="alert"></p>
+      <div class="forecast" id="forecast-days">{% if forecast %}{% for d in forecast %}<div class="day day-{{ d.rating | lower }}{{ ' day-pick' if d.date == quote.recommended_date }}"><span class="day-name">{{ d.weekday }}</span><span class="day-summary">{{ d.summary }}</span><span class="day-temp">{{ d.high_f }}° / {{ d.low_f }}°</span><span class="day-rain">{{ d.rain_chance }}% rain</span><span class="day-rating">{{ d.rating }}</span></div>{% endfor %}{% endif %}</div>
+    </section>
+  </div>
+
+  <aside class="detail-side">
+    <section class="panel">
+      <h2>Status</h2>
+      <form method="post" action="{{ url_for('change_status', quote_id=quote.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="status-buttons">
+          {% for s in statuses %}
+            <button type="submit" name="status" value="{{ s }}" class="status-btn {{ 'status-on' if quote.status == s }}">{{ s }}</button>
+          {% endfor %}
+        </div>
+      </form>
+      <dl class="contact">
+        <div><dt>Email</dt><dd>{{ quote.customer_email }}</dd></div>
+        {% if quote.customer_phone %}<div><dt>Phone</dt><dd>({{ quote.customer_phone[:3] }}) {{ quote.customer_phone[3:6] }}-{{ quote.customer_phone[6:] }}</dd></div>{% endif %}
+        {% if quote.notes %}<div><dt>Notes</dt><dd>{{ quote.notes }}</dd></div>{% endif %}
+      </dl>
+    </section>
+
+    <section class="panel">
+      <div class="section-head">
+        <h2>Proposal email</h2>
+        <button type="button" class="btn btn-secondary btn-small" id="proposal-btn">
+          {{ 'Redraft' if quote.proposal else 'Draft' }}
+        </button>
+      </div>
+      <p class="inline-error hidden" id="proposal-error" role="alert"></p>
+      <div class="proposal {{ '' if quote.proposal else 'hidden' }}" id="proposal-text">{{ quote.proposal or '' }}</div>
+      <p class="muted {{ 'hidden' if quote.proposal }}" id="proposal-empty">Drafts the customer email from this quote. Prices are copied over unchanged.</p>
+      <button type="button" class="btn btn-secondary btn-block {{ '' if quote.proposal else 'hidden' }}" id="copy-btn">Copy text</button>
+    </section>
+
+    <section class="panel">
+      <h2>History</h2>
+      <ol class="history">
+        {% for a in activity %}
+          <li><span>{{ a.detail }}</span><time datetime="{{ a.created_at }}">{{ a.created_at | nice_date }}</time></li>
+        {% endfor %}
+      </ol>
+    </section>
+  </aside>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/common.js') }}"></script>
+<script src="{{ url_for('static', filename='js/quote_detail.js') }}"></script>
+{% endblock %}

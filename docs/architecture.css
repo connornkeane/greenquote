@@ -1,0 +1,30 @@
+@font-face { font-family: "Public Sans"; src: url("../static/fonts/public-sans-latin-400-normal.woff2"); font-weight: 400; }
+@font-face { font-family: "Public Sans"; src: url("../static/fonts/public-sans-latin-600-normal.woff2"); font-weight: 600; }
+@font-face { font-family: "Public Sans"; src: url("../static/fonts/public-sans-latin-700-normal.woff2"); font-weight: 700; }
+@font-face { font-family: "Source Serif 4"; src: url("../static/fonts/source-serif-4-latin-700-normal.woff2"); font-weight: 700; }
+body { margin: 0; background: #f7f6f2; }
+svg { display: block; width: 100%; height: auto; font-family: "Public Sans", Arial, sans-serif; }
+.title { font-family: "Source Serif 4", Georgia, serif; font-size: 40px; font-weight: 700; fill: #183829; }
+.sub { font-size: 20px; fill: #5b6560; }
+.tier { fill: #ffffff; stroke: #e2e0d6; stroke-width: 2; }
+.tier-app { fill: #eef4ef; }
+.tier-data { fill: #fbf3e4; }
+.tier-ext { fill: #f1f0ea; stroke-dasharray: 8 6; }
+.tier-label { font-size: 18px; font-weight: 700; fill: #24513c; }
+.tier-sub { font-size: 17px; fill: #5b6560; }
+.box { fill: #ffffff; stroke: #cfcdc2; stroke-width: 1.5; }
+.box-js { stroke: #9a6416; stroke-width: 2.5; }
+.box-svc { stroke: #2f6f53; stroke-width: 2; }
+.box-env { fill: #183829; stroke: #183829; }
+.box-env .box-title, .box-env + text { fill: #fff; }
+.box-title { font-size: 19px; font-weight: 700; fill: #1c2321; }
+.box-text { font-size: 15.5px; fill: #3d4642; }
+.box-strong { font-weight: 700; fill: #24513c; }
+.note { font-size: 15px; fill: #9a6416; font-weight: 600; }
+.flow { fill: none; stroke: #24513c; stroke-width: 3; }
+.flow-js { stroke: #9a6416; stroke-dasharray: 7 5; }
+.flow-text { font-size: 14px; font-weight: 700; fill: #24513c; }
+.flow-text-a { fill: #9a6416; }
+.divider { stroke: #b9b6a8; stroke-width: 2; stroke-dasharray: 4 8; }
+.divider-text { font-size: 14px; fill: #7b847f; font-weight: 600; }
+.env-text { fill: #e3eee6; }

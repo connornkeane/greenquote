@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Quote #{{ quote.id }} for {{ quote.customer_name }}{% endblock %}
+{% block content %}
+<div class="print-actions no-print">
+  <a class="btn btn-secondary" href="{{ url_for('quote_detail', quote_id=quote.id) }}">Back to quote</a>
+  <button type="button" class="btn btn-primary" id="print-btn">Print / save as PDF</button>
+</div>
+
+<article class="sheet">
+  <header class="sheet-head">
+    <div>
+      <p class="sheet-brand">{{ business_name }}</p>
+      <p class="muted">Estimate #{{ quote.id }} · {{ printed_on }}</p>
+    </div>
+    <div class="sheet-total">
+      <span class="sheet-label">Estimate total</span>
+      <span class="sheet-amount">{{ quote.total | money }}</span>
+    </div>
+  </header>
+
+  <section class="sheet-parties">
+    <div>
+      <p class="sheet-label">Prepared for</p>
+      <p><strong>{{ quote.customer_name }}</strong></p>
+      <p>{{ quote.customer_email }}</p>
+      {% if quote.customer_phone %}<p>({{ quote.customer_phone[:3] }}) {{ quote.customer_phone[3:6] }}-{{ quote.customer_phone[6:] }}</p>{% endif %}
+    </div>
+    <div>
+      <p class="sheet-label">Job site</p>
+      <p><strong>{{ quote.city }}, {{ quote.state }}</strong></p>
+      <p>{{ terrain_label }} · {{ frequency_label }}</p>
+      {% if quote.recommended_date %}<p>Proposed start: {{ quote.recommended_date | nice_date }}</p>{% endif %}
+    </div>
+  </section>
+
+  <table class="data-table">
+    <thead>
+      <tr><th>Service</th><th class="num">Quantity</th><th class="num">Amount</th></tr>
+    </thead>
+    <tbody>
+      {% for item in items %}
+        <tr>
+          <td>{{ item.label }}</td>
+          <td class="num">{{ '%g' % item.quantity }} <span class="unit-inline">{{ item.unit }}</span></td>
+          <td class="num">{{ item.line_total | money }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <dl class="lines detail-totals">
+    {% if quote.discount %}<div><dt>Recurring service discount</dt><dd>-{{ quote.discount | money }}</dd></div>{% endif %}
+    {% if quote.travel_fee %}<div><dt>Travel</dt><dd>{{ quote.travel_fee | money }}</dd></div>{% endif %}
+    {% if quote.minimum_adjustment %}<div><dt>Minimum job charge</dt><dd>{{ quote.minimum_adjustment | money }}</dd></div>{% endif %}
+    <div><dt>Sales tax on materials</dt><dd>{{ quote.tax | money }}</dd></div>
+    <div class="total"><dt>Total</dt><dd>{{ quote.total | money }}</dd></div>
+    {% if quote.deposit %}<div><dt>Deposit to book (30%)</dt><dd>{{ quote.deposit | money }}</dd></div>{% endif %}
+  </dl>
+
+  <footer class="sheet-foot">
+    <p>Estimate valid for 30 days. Final price may change if site conditions differ from those described. Weather delays are rescheduled at no charge.</p>
+  </footer>
+</article>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/print.js') }}"></script>
+{% endblock %}

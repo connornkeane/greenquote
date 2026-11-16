@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Quotes{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <h1>Quotes</h1>
+  </div>
+  <div class="head-actions">
+    <a class="btn btn-secondary" href="{{ url_for('export_all') }}">Export CSV</a>
+    <a class="btn btn-primary" href="{{ url_for('new_quote') }}">New quote</a>
+  </div>
+</section>
+
+<dl class="ledger">
+  <div><dt>Open (draft + sent)</dt><dd>{{ stats.pipeline | money }}</dd></div>
+  <div><dt>Won</dt><dd>{{ stats.won | money }}</dd></div>
+  <div><dt>Win rate</dt><dd>{{ stats.win_rate ~ '%' if stats.win_rate is not none else 'n/a' }}</dd></div>
+  <div><dt>Quotes</dt><dd>{{ stats.quote_count }}</dd></div>
+</dl>
+
+<nav class="tabs" aria-label="Filter by status">
+  <a href="{{ url_for('dashboard') }}" class="tab {{ 'tab-on' if not active_status }}">All</a>
+  {% for s in statuses %}
+    <a href="{{ url_for('dashboard', status=s) }}" class="tab {{ 'tab-on' if active_status == s }}">{{ s }}</a>
+  {% endfor %}
+</nav>
+
+{% if quotes %}
+  <div class="table-wrap">
+    <table class="data-table quote-table">
+      <thead>
+        <tr>
+          <th>Customer</th>
+          <th class="hide-sm">Job site</th>
+          <th class="hide-sm num">Crew days</th>
+          <th>Status</th>
+          <th class="num">Total</th>
+          <th class="hide-sm num">Updated</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for q in quotes %}
+          <tr>
+            <td>
+              <a href="{{ url_for('quote_detail', quote_id=q.id) }}">{{ q.customer_name }}</a>
+              <span class="sub">#{{ q.id }}<span class="hide-sm"> · {{ q.customer_email }}</span></span>
+            </td>
+            <td class="hide-sm">{{ q.city }}, {{ q.state }}</td>
+            <td class="hide-sm num">{{ q.crew_days }}</td>
+            <td><span class="status status-{{ q.status | lower }}">{{ q.status }}</span></td>
+            <td class="num">{{ q.total | money }}</td>
+            <td class="hide-sm num">{{ q.updated_at | nice_date }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="empty">
+    <p>No quotes {{ 'marked ' ~ active_status if active_status else 'yet' }}.</p>
+    <a class="btn btn-primary" href="{{ url_for('new_quote') }}">New quote</a>
+  </div>
+{% endif %}
+{% endblock %}
