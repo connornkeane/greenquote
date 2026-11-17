@@ -31,7 +31,7 @@ cd greenquote
 python3 -m venv venv
 source venv/bin/activate            # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env                # then edit .env (see below)
+cp .env.example .env                # then set SECRET_KEY and OPENAI_API_KEY in .env
 flask --app app seed-demo           # optional: adds 3 sample quotes
 flask --app app run --port 5050
 ```
@@ -50,7 +50,7 @@ Set these in `.env`. The real `.env` file is listed in `.gitignore` and never co
 | `OPENAI_API_KEY` | For AI proposals | Key for the OpenAI API (the class key). Without it, everything else works and the proposal button shows a friendly message. |
 | `OPENAI_MODEL` | No | Defaults to `gpt-5.4-nano`. |
 | `BUSINESS_NAME` | No | Name printed on quotes and proposals. |
-| `DATABASE_PATH` | No | Where the SQLite file lives. Defaults to `data/greenquote.db`. |
+| `DATABASE_PATH` | No | Where the SQLite file lives. Leave it out to use `data/greenquote.db`. |
 | `GEOCODE_URL`, `FORECAST_URL` | No | Open-Meteo endpoints. Open-Meteo needs no API key. |
 
 ## Security
@@ -87,6 +87,7 @@ greenquote/
 ├── static/css, static/js  styling and client-side scripts
 ├── tests/                 pytest suite
 ├── docs/architecture.png  n-tier diagram
+├── video/                 project presentation video
 ├── CHECKLIST.md           completed requirements checklist
 ├── .env.example
 └── requirements.txt
